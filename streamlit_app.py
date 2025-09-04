@@ -120,7 +120,9 @@ def load_data(start: str, end: str) -> pd.DataFrame:
 
 
 # ---------------------- UI ----------------------
-st.title("🥬 韭菜指数 & 三大ETF")
+st.markdown("## 🥬 韭菜指数追踪")
+st.caption("数据来源：东方财富，点击左上方 >> 手动更新")
+st.caption("韭指口径：513050/159915/513120等权平均，净值基准日：2025-08-29")
 with st.sidebar:
     st.header("时间设置")
     start_d = st.date_input("起始日期", value=date(2025, 8, 29))
@@ -145,7 +147,10 @@ else:
         .sort_values("日期_dt", ascending=False)
         .head(1)
     )
-    st.subheader("📊 当日韭菜指数指标")
+    # 获取最新日期
+    latest_date = df_plot["日期_dt"].max().strftime("%Y-%m-%d")
+    st.subheader(f"📊 当日韭菜指数指标 （{latest_date}）")
+
     col1, col2 = st.columns(2)
     if jiucai_latest.empty:
         col1.metric("当日涨跌幅（%）", "—")
@@ -177,8 +182,9 @@ else:
             legend=dict(
             orientation="h",  # 水平排列（关键参数，实现平铺）
             yanchor="bottom",
-            y=1.2,  # 位于图表上方
+            y=-0.35,  # 位于图表下方
             xanchor="left",
+            x=0
             # itemwidth=100,  # 每个图例项宽度，根据需要调整
             # font=dict(size=10)  # 字体大小，避免拥挤
         ),

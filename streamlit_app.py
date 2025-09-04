@@ -167,33 +167,61 @@ else:
     df_filtered = df_plot[df_plot["基金名称"].isin(picked)].copy()
 
     # 折线图：指数净值时间线，plotly绘制，带y=1.0虚线
+    import plotly.graph_objects as go
+
     st.subheader("📈 韭菜指数净值趋势变化")
     pivot_nav = (
         df_filtered.pivot_table(index="日期_dt", columns="基金名称", values="指数净值")
         .sort_index()
     )
+
     if not pivot_nav.empty:
         ymin, ymax = pivot_nav.min().min(), pivot_nav.max().max()
         margin = (ymax - ymin) * 0.1
         lower = min(ymin, 1.0) - margin
         upper = max(ymax, 1.0) + margin
-        fig = px.line(pivot_nav, x=pivot_nav.index, y=pivot_nav.columns, markers=True)
+
+        fig = go.Figure()
+
+        color_map = {
+            "韭菜指数": "red",   # 大红色
+        }
+        for col in pivot_nav.columns:
+            if col == "韭菜指数":
+                fig.add_trace(go.Scatter(
+                    x=pivot_nav.index, y=pivot_nav[col],
+                    mode="lines+markers",
+                    name=col,
+                    line=dict(color=color_map.get(col, "red"), width=3),  # 加粗
+                    marker=dict(size=6)
+                ))
+            else:
+                fig.add_trace(go.Scatter(
+                    x=pivot_nav.index, y=pivot_nav[col],
+                    mode="lines+markers",
+                    name=col,
+                    line=dict(width=1.5),  # 不加粗，默认浅色
+                    opacity=0.6  # 透明度调低，看起来更淡
+                ))
+
+        # y=1.0 虚线基准线
+        fig.add_hline(y=1.0, line=dict(color="gray", dash="dash"))
+
         fig.update_layout(
             legend=dict(
-            orientation="h",  # 水平排列（关键参数，实现平铺）
-            yanchor="bottom",
-            y=-0.35,  # 位于图表下方
-            xanchor="left",
-            x=0
-            # itemwidth=100,  # 每个图例项宽度，根据需要调整
-            # font=dict(size=10)  # 字体大小，避免拥挤
-        ),
+                orientation="h",
+                yanchor="bottom",
+                y=-0.35,
+                xanchor="left",
+                x=0
+            ),
             yaxis=dict(range=[lower, upper], title="指数净值", zeroline=False),
             xaxis=dict(title="日期"),
-            shapes=[dict(type="line", x0=pivot_nav.index.min(), x1=pivot_nav.index.max(),
-                         y0=1.0, y1=1.0, line=dict(color="gray", dash="dash"))]
         )
+
         st.plotly_chart(fig, use_container_width=True)
+
+
 
     # 明细表
     st.subheader("📜 明细数据")

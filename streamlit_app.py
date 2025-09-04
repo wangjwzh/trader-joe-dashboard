@@ -120,9 +120,9 @@ def load_data(start: str, end: str) -> pd.DataFrame:
 
 
 # ---------------------- UI ----------------------
-st.title("🥬 韭菜指数 & 📈 三大ETF")
+st.title("🥬 韭菜指数 & 三大ETF")
 with st.sidebar:
-    st.header("时间设置（默认8.29起始）")
+    st.header("时间设置")
     start_d = st.date_input("起始日期", value=date(2025, 8, 29))
     end_d = st.date_input("结束日期", value=date.today())
     fetch_btn = st.button("获取/刷新数据", type="primary")
@@ -145,7 +145,7 @@ else:
         .sort_values("日期_dt", ascending=False)
         .head(1)
     )
-    st.markdown("### 📊 最新韭菜指数指标")
+    st.subheader("📊 当日韭菜指数指标")
     col1, col2 = st.columns(2)
     if jiucai_latest.empty:
         col1.metric("当日涨跌幅（%）", "—")
@@ -162,7 +162,7 @@ else:
     df_filtered = df_plot[df_plot["基金名称"].isin(picked)].copy()
 
     # 折线图：指数净值时间线，plotly绘制，带y=1.0虚线
-    st.subheader("韭菜指数净值时间线折线图")
+    st.subheader("📈 韭菜指数净值趋势变化")
     pivot_nav = (
         df_filtered.pivot_table(index="日期_dt", columns="基金名称", values="指数净值")
         .sort_index()
@@ -174,6 +174,14 @@ else:
         upper = max(ymax, 1.0) + margin
         fig = px.line(pivot_nav, x=pivot_nav.index, y=pivot_nav.columns, markers=True)
         fig.update_layout(
+            legend=dict(
+            orientation="h",  # 水平排列（关键参数，实现平铺）
+            yanchor="bottom",
+            y=1.2,  # 位于图表上方
+            xanchor="left",
+            # itemwidth=100,  # 每个图例项宽度，根据需要调整
+            # font=dict(size=10)  # 字体大小，避免拥挤
+        ),
             yaxis=dict(range=[lower, upper], title="指数净值", zeroline=False),
             xaxis=dict(title="日期"),
             shapes=[dict(type="line", x0=pivot_nav.index.min(), x1=pivot_nav.index.max(),
@@ -182,7 +190,7 @@ else:
         st.plotly_chart(fig, use_container_width=True)
 
     # 明细表
-    st.subheader("明细数据（可筛选）")
+    st.subheader("📜 明细数据")
     detail_cols = ["基金代码","基金名称","日期","当日涨跌幅（%）","ETF价格","指数净值"]
     detail_df = (
         df_filtered.sort_values("日期_dt", ascending=False)[detail_cols]
